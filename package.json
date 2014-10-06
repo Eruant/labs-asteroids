@@ -1,0 +1,10 @@
+{
+  "name": "bynd-motion",
+  "devDependencies": {
+    "browser-sync": "^1.5.3",
+    "browserify": "^5.13.1",
+    "gulp": "^3.8.8",
+    "gulp-jade": "^0.8.0",
+    "vinyl-source-stream": "^1.0.0"
+  }
+}
