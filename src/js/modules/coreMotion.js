@@ -31,8 +31,12 @@ Motion.prototype.createCanvas = function () {
   this.canvasMovement = elements.createCanvas(this.video.width, this.video.height);
   this.ctxMovement = this.canvasMovement.getContext('2d');
 
+  this.canvasDirections = elements.createCanvas(this.video.width, this.video.height);
+  this.ctxDirections = this.canvasDirections.getContext('2d');
+
   //global.document.getElementsByTagName('body')[0].appendChild(this.canvasRaw);
   global.document.getElementsByTagName('body')[0].appendChild(this.canvasMovement);
+  global.document.getElementsByTagName('body')[0].appendChild(this.canvasDirections);
 
 };
 
@@ -40,7 +44,8 @@ Motion.prototype.update = function () {
 
   this.drawVideo();
   this.blend();
-  //this.render();
+
+  this.drawDirections();
 
   global.requestAnimationFrame(this.update.bind(this));
 };
@@ -75,8 +80,9 @@ Motion.prototype.blend = function () {
   this.lastBlendedData = blendedData;
 };
 
-Motion.prototype.render = function () {
-  this.ctxMovement.drawImage(this.canvasRaw, 0, 0);
+Motion.prototype.drawDirections = function () {
+
+  // calculate directions based in canvas data
 };
 
 module.exports = Motion;
