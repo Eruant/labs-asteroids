@@ -36,16 +36,13 @@ Motion.prototype.createCanvas = function () {
 
   //global.document.getElementsByTagName('body')[0].appendChild(this.canvasRaw);
   global.document.getElementsByTagName('body')[0].appendChild(this.canvasMovement);
-  global.document.getElementsByTagName('body')[0].appendChild(this.canvasDirections);
-
+  //global.document.getElementsByTagName('body')[0].appendChild(this.canvasDirections);
 };
 
 Motion.prototype.update = function () {
 
   this.drawVideo();
   this.blend();
-
-  this.drawDirections();
 
   global.requestAnimationFrame(this.update.bind(this));
 };
@@ -56,7 +53,7 @@ Motion.prototype.drawVideo = function () {
 
 Motion.prototype.blend = function () {
 
-  var width, height, sourceData, blendedData;
+  var width, height, sourceData, blendedData, lastUpdate;
 
   width = this.canvasRaw.width;
   height = this.canvasRaw.height;
@@ -68,21 +65,15 @@ Motion.prototype.blend = function () {
   }
 
   blendedData = this.ctxRaw.createImageData(width, height);
+  lastUpdate = this.ctxDirections.getImageData(0, 0, width, height);
 
-  if (!this.lastBlendedData) {
-    this.lastBlendedData = null;
-  }
-  
-  util.difference(blendedData.data, sourceData.data, this.lastImageData.data, this.lastBlendedData);
+  util.difference(blendedData.data, sourceData.data, this.lastImageData.data, lastUpdate.data);
 
   this.ctxMovement.putImageData(blendedData, 0, 0);
   this.lastImageData = sourceData;
-  this.lastBlendedData = blendedData;
-};
 
-Motion.prototype.drawDirections = function () {
-
-  // calculate directions based in canvas data
+  this.ctxDirections.clearRect(0, 0, width, height);
+  this.ctxDirections.drawImage(this.canvasMovement, 0, 0);
 };
 
 module.exports = Motion;
