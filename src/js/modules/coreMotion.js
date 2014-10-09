@@ -10,7 +10,12 @@ var Motion = function (stream) {
   this.video.width = 480;
   this.video.height = 360;
   this.video.autoplay = true;
-  this.video.src = (global.webkitURL) ? global.webkitURL.createObjectURL(stream) : stream;
+
+  if (global.navigator.mozGetUserMedia) {
+    this.video.mozSrcObject = stream;
+  } else {
+    this.video.src = (global.webkitURL) ? global.webkitURL.createObjectURL(stream) : stream;
+  }
 
   // TODO remove after testing
   //global.document.getElementsByTagName('body')[0].appendChild(this.video);
@@ -53,7 +58,15 @@ Motion.prototype.update = function () {
 };
 
 Motion.prototype.drawVideo = function () {
-  this.ctxRaw.drawImage(this.video, 0, 0, this.video.width, this.video.height);
+  try {
+    this.ctxRaw.drawImage(this.video, 0, 0, this.video.width, this.video.height);
+  } catch (e) {
+    if (e.name === 'NS_ERROR_NOT_AVAILABLE') {
+      console.log('mozilla bug');
+    } else {
+      throw e;
+    }
+  }
 };
 
 Motion.prototype.blend = function () {

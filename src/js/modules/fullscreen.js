@@ -7,7 +7,7 @@ var requestFullScreen = function (el) {
   } else if (el.msRequestFullScreen) {
     el.msRequestFullScreen();
   } else if (el.mozRequestFullScreen) {
-    el.mozRequastFullScreen();
+    el.mozRequestFullScreen();
   } else if (el.webkitRequestFullScreen) {
     el.webkitRequestFullScreen();
   }
