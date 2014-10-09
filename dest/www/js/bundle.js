@@ -7,9 +7,10 @@ window.onload = function () {
   }
 };
 
-},{"./modules/webcam.js":6}],2:[function(require,module,exports){
+},{"./modules/webcam.js":7}],2:[function(require,module,exports){
 var elements = require('./elements.js'),
-  util = require('./util.js');
+  util = require('./util.js'),
+  fullscreen = require('./fullscreen.js');
 
 var global = window;
 
@@ -47,6 +48,10 @@ Motion.prototype.createCanvas = function () {
   //global.document.getElementsByTagName('body')[0].appendChild(this.canvasRaw);
   global.document.getElementsByTagName('body')[0].appendChild(this.canvasMovement);
   //global.document.getElementsByTagName('body')[0].appendChild(this.canvasDirections);
+
+  //fullscreen.init(this.canvasMovement);
+  fullscreen.init();
+
 };
 
 Motion.prototype.update = function () {
@@ -88,7 +93,7 @@ Motion.prototype.blend = function () {
 
 module.exports = Motion;
 
-},{"./elements.js":3,"./util.js":5}],3:[function(require,module,exports){
+},{"./elements.js":3,"./fullscreen.js":4,"./util.js":6}],3:[function(require,module,exports){
 var global = window,
   doc = global.document;
 
@@ -106,6 +111,49 @@ module.exports = {
 };
 
 },{}],4:[function(require,module,exports){
+var activeElement = window.document.getElementsByTagName('body')[0];
+
+var requestFullScreen = function (el) {
+
+  if (el.requestFullScreen) {
+    el.requestFullScreen();
+  } else if (el.msRequestFullScreen) {
+    el.msRequestFullScreen();
+  } else if (el.mozRequestFullScreen) {
+    el.mozRequastFullScreen();
+  } else if (el.webkitRequestFullScreen) {
+    el.webkitRequestFullScreen();
+  }
+
+};
+
+var eventHandler = function (event) {
+
+  if (event.keyCode === 13) {
+    requestFullScreen(activeElement);
+  }
+
+};
+
+var addListener = function () {
+  window.document.addEventListener("keydown", eventHandler, false);
+};
+
+var init = function (el) {
+
+  if (typeof el !== 'undefined') {
+    activeElement = el;
+  }
+
+  addListener();
+
+};
+
+module.exports = {
+  init: init
+};
+
+},{}],5:[function(require,module,exports){
 var global = window;
 
 var init = function () {
@@ -136,7 +184,7 @@ module.exports = {
   requestFullScreen: requestFullScreen
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var currentColor = {
   r: 0xff,
   g: 0xff,
@@ -217,7 +265,7 @@ module.exports = {
   difference: difference
 };
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var polyfill = require('./polyfill.js'),
   Motion = require('./coreMotion.js');
 
@@ -226,11 +274,11 @@ var global = window;
 var success = function (stream) {
   var motion = new Motion(stream);
 
-  global.document.addEventListener('keydown', function (event) {
-    if (event.keyCode === 13) {
-      polyfill.requestFullScreen(motion.video);
-    }
-  });
+  //global.document.addEventListener('keydown', function (event) {
+    //if (event.keyCode === 13) {
+      //polyfill.requestFullScreen(motion.video);
+    //}
+  //});
 };
 
 var error = function () {
@@ -258,4 +306,4 @@ module.exports = {
   create: create
 };
 
-},{"./coreMotion.js":2,"./polyfill.js":4}]},{},[1]);
+},{"./coreMotion.js":2,"./polyfill.js":5}]},{},[1]);

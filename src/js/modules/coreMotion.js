@@ -1,5 +1,6 @@
 var elements = require('./elements.js'),
-  util = require('./util.js');
+  util = require('./util.js'),
+  fullscreen = require('./fullscreen.js');
 
 var global = window;
 
@@ -37,6 +38,10 @@ Motion.prototype.createCanvas = function () {
   //global.document.getElementsByTagName('body')[0].appendChild(this.canvasRaw);
   global.document.getElementsByTagName('body')[0].appendChild(this.canvasMovement);
   //global.document.getElementsByTagName('body')[0].appendChild(this.canvasDirections);
+
+  //fullscreen.init(this.canvasMovement);
+  fullscreen.init();
+
 };
 
 Motion.prototype.update = function () {

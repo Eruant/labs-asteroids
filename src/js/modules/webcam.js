@@ -6,11 +6,11 @@ var global = window;
 var success = function (stream) {
   var motion = new Motion(stream);
 
-  global.document.addEventListener('keydown', function (event) {
-    if (event.keyCode === 13) {
-      polyfill.requestFullScreen(motion.video);
-    }
-  });
+  //global.document.addEventListener('keydown', function (event) {
+    //if (event.keyCode === 13) {
+      //polyfill.requestFullScreen(motion.video);
+    //}
+  //});
 };
 
 var error = function () {
