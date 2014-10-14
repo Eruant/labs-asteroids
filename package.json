@@ -1,5 +1,5 @@
 {
-  "name": "bynd-motion",
+  "name": "labs-asteroids",
   "devDependencies": {
     "browser-sync": "^1.5.3",
     "browserify": "^5.13.1",

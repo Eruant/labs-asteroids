@@ -72,7 +72,7 @@ Asteroid.prototype.draw = function (ctx) {
   ctx.save();
   ctx.translate(this.x, this.y);
   ctx.rotate(this.angle * 3.14 / 180);
-  ctx.fillStyle = this.alive ? '#00ff00' : '#ff0000';
+  ctx.fillStyle = this.alive ? 'rgb(0, 255, 0)' : 'rgb(255, 0, 0)';
   ctx.fillRect(-(this.width * 0.5), -(this.height * 0.5), this.width, this.height);
   ctx.restore();
 

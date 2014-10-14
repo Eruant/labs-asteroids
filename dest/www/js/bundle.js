@@ -82,7 +82,7 @@ Asteroid.prototype.draw = function (ctx) {
   ctx.save();
   ctx.translate(this.x, this.y);
   ctx.rotate(this.angle * 3.14 / 180);
-  ctx.fillStyle = this.alive ? '#00ff00' : '#ff0000';
+  ctx.fillStyle = this.alive ? 'rgb(0, 255, 0)' : 'rgb(255, 0, 0)';
   ctx.fillRect(-(this.width * 0.5), -(this.height * 0.5), this.width, this.height);
   ctx.restore();
 
@@ -240,7 +240,7 @@ Asteroids.prototype.drawAsteroids = function () {
 
 Asteroids.prototype.collisionTest = function () {
 
-  var i, j, len, asteroid, ctx, xMin, xMax, yMin, yMax, clipArea, clipLength, hitCount;
+  var i, j, len, asteroid, ctx, xMin, xMax, yMin, yMax, clipArea, clipLength, hitCount, tl, br;
 
   i = 0;
   len = this.asteroids.length;
@@ -254,11 +254,30 @@ Asteroids.prototype.collisionTest = function () {
     yMin = -(asteroid.height * 0.5);
     yMax = asteroid.height * 0.5;
 
+    // top left = lt, bottom right = br
+    tl = [asteroid.x + xMin, asteroid.y + yMin];
+    br = [asteroid.x + xMax, asteroid.y + yMax];
+
+    // make sure the x values are on screen
+    if (tl[0] < 0) {
+      tl[0] = 1;
+    } else if (br[0] > this.canvasMovement.width) {
+      br[0] = this.canvasMovement.width - 1;
+    }
+
+    // make sure the y values are on screen
+    if (tl[1] < 0) {
+      tl[1] = 1;
+    } else if (br[1] > this.canvasMovement.height) {
+      br[1] = this.canvasMovement.height - 1;
+    }
+
     ctx.save();
     //ctx.translate(asteroid.x, asteroid.y);
     //ctx.rotate(asteroid.angle * 3.14 / 180);
 
-    clipArea = ctx.getImageData(asteroid.x + xMin, asteroid.y + yMin, asteroid.x + xMax, asteroid.y + yMax);
+    // this area does not take into account the rotation
+    clipArea = ctx.getImageData(tl[0], tl[1], br[0], br[1]);
     clipLength = (asteroid.width * asteroid.height) * 0.25;
     j = 0;
     hitCount = 0;
@@ -269,9 +288,19 @@ Asteroids.prototype.collisionTest = function () {
       }
     }
 
-    if (hitCount > clipLength * 0.5) {
+    if (hitCount > clipLength * 0.3) {
       asteroid.hit();
     }
+
+    // display debugging
+    //ctx.strokeStyle = '#0000ff';
+    //ctx.beginPath();
+    //ctx.moveTo(tl[0], tl[1]);
+    //ctx.lineTo(br[0], tl[1]);
+    //ctx.lineTo(br[0], br[1]);
+    //ctx.lineTo(tl[0], br[1]);
+    //ctx.closePath();
+    //ctx.stroke();
 
     ctx.restore();
 
