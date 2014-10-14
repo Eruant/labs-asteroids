@@ -1,10 +1,10 @@
 var polyfill = require('./polyfill.js'),
-  Motion = require('./coreMotion.js');
+  Asteroids = require('./asteroids.js');
 
 var global = window;
 
 var success = function (stream) {
-  var motion = new Motion(stream);
+  var asteroids = new Asteroids(stream);
 };
 
 var error = function () {

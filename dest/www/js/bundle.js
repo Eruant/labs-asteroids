@@ -7,81 +7,191 @@ window.onload = function () {
   }
 };
 
-},{"./modules/webcam.js":7}],2:[function(require,module,exports){
-var elements = require('./elements.js'),
-  util = require('./util.js'),
-  fullscreen = require('./fullscreen.js');
+},{"./modules/webcam.js":8}],2:[function(require,module,exports){
+var Asteroid = function (x, y, ctxSize) {
 
-var global = window;
+  this.x = x;
+  this.y = y;
+  this.ctxSize = ctxSize;
+  this.width = Math.random() * 20;
+  this.height = Math.random() * 20;
+  this.alive = true;
 
-var Motion = function (stream) {
+  this.speed = {
+    x: Math.random() * 20 - 10,
+    y: Math.random() * 20 - 10
+  };
 
-  this.video = global.document.createElement('video');
-  this.video.width = 480;
-  this.video.height = 360;
-  this.video.autoplay = true;
+  this.angle = Math.floor(Math.random() * 360);
 
-  if (global.navigator.mozGetUserMedia) {
-    this.video.mozSrcObject = stream;
-  } else {
-    this.video.src = (global.webkitURL) ? global.webkitURL.createObjectURL(stream) : stream;
-  }
+  this.rotation = Math.random() * 0.5 - 0.25;
 
-  // TODO remove after testing
-  //global.document.getElementsByTagName('body')[0].appendChild(this.video);
+  this.lastUpdated = new Date().getTime();
 
-  this.createCanvas();
-
-  global.requestAnimationFrame(this.update.bind(this));
 };
 
-Motion.prototype.createCanvas = function () {
+Asteroid.prototype.reset = function (fromX) {
+
+  this.alive = true;
+
+  if (fromX) {
+    this.x = Math.random() * this.ctxSize.width;
+    this.y = (Math.random () > 0.5) ? 0 : this.ctxSize.height;
+  } else {
+    this.x = (Math.random() > 0.5) ? 0 : this.ctxSize.width;
+    this.y = Math.random() * this.ctxSize.height;
+  }
+  this.angle = Math.floor(Math.random() * 360);
+
+  this.speed.x = Math.random() * 20 - 10;
+  this.speed.y = Math.random() * 20 - 10;
+  this.rotation = Math.random() * 0.5 - 0.25;
+
+};
+
+Asteroid.prototype.update = function (time) {
+
+  var timeSinceLastUpdate = (time - this.lastUpdated) / 1000;
+
+  this.lastUpdated = time;
+
+  this.angle += this.rotation * timeSinceLastUpdate;
+
+  if (this.angle > 360) {
+    this.angle -= 360;
+  } else if (this.angle < 0) {
+    this.angle += 360;
+  }
+
+  this.x += this.speed.x * timeSinceLastUpdate;
+  this.y += this.speed.y * timeSinceLastUpdate;
+
+  if (!this.alive) {
+    this.speed.y += 10;
+  }
+
+  if (this.x > this.ctxSize.width ||this.x < 0) {
+    this.reset(true);
+  } else if (this.y > this.ctxSize.height || this.y < 0) {
+    this.reset(false);
+  }
+};
+
+Asteroid.prototype.draw = function (ctx) {
+
+  ctx.save();
+  ctx.translate(this.x, this.y);
+  ctx.rotate(this.angle * 3.14 / 180);
+  ctx.fillStyle = this.alive ? '#00ff00' : '#ff0000';
+  ctx.fillRect(-(this.width * 0.5), -(this.height * 0.5), this.width, this.height);
+  ctx.restore();
+
+};
+
+Asteroid.prototype.hit = function () {
+  this.alive = false;
+
+  this.speed.x = -this.speed.x;
+  this.rotation *= 10;
+};
+
+module.exports = Asteroid;
+
+},{}],3:[function(require,module,exports){
+var elements = require('./elements.js'),
+  util = require('./util.js'),
+  fullscreen = require('./fullscreen.js'),
+  Asteroid = require('./asteroid.js'),
+
+  global = window,
+
+  Asteroids = function (stream) {
+
+    this.video = global.document.createElement('video');
+    this.video.width = 480;
+    this.video.height=  360;
+    this.video.autoplay = true;
+
+    if (global.navigator.mozGetUserMedia) {
+      this.video.mozSrcObject = stream;
+    } else {
+      this.video.src = (global.webkitURL) ? global.webkitURL.createObjectURL(stream) : stream;
+    }
+
+    this.createCanvas();
+    this.createAsteroids();
+
+    global.requestAnimationFrame(this.update.bind(this));
+
+  };
+
+Asteroids.prototype.createCanvas = function () {
 
   this.canvasRaw = elements.createCanvas(this.video.width, this.video.height);
   this.ctxRaw = this.canvasRaw.getContext('2d');
 
-  // mirror the image
+  // mirror the video feed
   this.ctxRaw.translate(this.canvasRaw.width, 0);
   this.ctxRaw.scale(-1, 1);
 
   this.canvasMovement = elements.createCanvas(this.video.width, this.video.height);
   this.ctxMovement = this.canvasMovement.getContext('2d');
 
-  this.canvasDirections = elements.createCanvas(this.video.width, this.video.height);
-  this.ctxDirections = this.canvasDirections.getContext('2d');
-
-  //global.document.getElementsByTagName('body')[0].appendChild(this.canvasRaw);
+  // show onscreen
   global.document.getElementsByTagName('body')[0].appendChild(this.canvasMovement);
-  //global.document.getElementsByTagName('body')[0].appendChild(this.canvasDirections);
 
-  //fullscreen.init(this.canvasMovement);
-  fullscreen.init();
-
+  // add option to make webpage fullscreen
+  fullscreen.init(global.document.getElementsByTagName('body')[0]);
 };
 
-Motion.prototype.update = function () {
+Asteroids.prototype.createAsteroids = function () {
 
-  this.drawVideo();
-  this.blend();
+  var i, len, x, y, asteroid;
+
+  i = 0;
+  len = 20;
+
+  this.asteroids = [];
+
+  for (; i < len; i++) {
+    x = Math.floor(Math.random() * this.video.width);
+    y = Math.floor(Math.random() * this.video.height);
+    asteroid = new Asteroid(x, y, {
+      width: this.video.width,
+      height: this.video.height
+    });
+    this.asteroids.push(asteroid);
+  }
+};
+
+Asteroids.prototype.update = function () {
+
+  this.drawVideoToRawCanvas();
+  this.calculateAndDrawMotion();
+  this.updateAsteroids();
+  this.collisionTest();
+  this.drawAsteroids();
 
   global.requestAnimationFrame(this.update.bind(this));
 };
 
-Motion.prototype.drawVideo = function () {
+Asteroids.prototype.drawVideoToRawCanvas = function () {
+
   try {
     this.ctxRaw.drawImage(this.video, 0, 0, this.video.width, this.video.height);
   } catch (e) {
-    if (e.name === 'NS_ERROR_NOT_AVAILABLE') {
-      console.log('mozilla bug');
+    if (e.name === 'NS_ERROR_NOT_AVAILAVLE') {
+      // This is a known mozilla bug, it should be okay on the next cycle
     } else {
       throw e;
     }
   }
+
 };
 
-Motion.prototype.blend = function () {
+Asteroids.prototype.calculateAndDrawMotion = function () {
 
-  var width, height, sourceData, blendedData, lastUpdate;
+  var width, height, sourceData, motionData;
 
   width = this.canvasRaw.width;
   height = this.canvasRaw.height;
@@ -89,24 +199,89 @@ Motion.prototype.blend = function () {
   sourceData = this.ctxRaw.getImageData(0, 0, width, height);
 
   if (!this.lastImageData) {
-    this.lastImageData = this.ctxRaw.getImageData(0, 0, width, height);
+    this.lastImageData = sourceData;
   }
 
-  blendedData = this.ctxRaw.createImageData(width, height);
-  lastUpdate = this.ctxDirections.getImageData(0, 0, width, height);
+  motionData = this.ctxRaw.createImageData(width, height);
 
-  util.difference(blendedData.data, sourceData.data, this.lastImageData.data, lastUpdate.data);
+  util.difference(motionData.data, sourceData.data, this.lastImageData.data);
 
-  this.ctxMovement.putImageData(blendedData, 0, 0);
+
+  this.ctxMovement.putImageData(motionData, 0, 0);
   this.lastImageData = sourceData;
-
-  this.ctxDirections.clearRect(0, 0, width, height);
-  this.ctxDirections.drawImage(this.canvasMovement, 0, 0);
 };
 
-module.exports = Motion;
+Asteroids.prototype.updateAsteroids = function () {
 
-},{"./elements.js":3,"./fullscreen.js":4,"./util.js":6}],3:[function(require,module,exports){
+  var i, len, time;
+
+  i = 0;
+  len = this.asteroids.length;
+  time = new Date().getTime();
+
+  for (; i < len; i++) {
+    this.asteroids[i].update(time);
+  }
+
+};
+
+Asteroids.prototype.drawAsteroids = function () {
+
+  var i, len;
+
+  i = 0;
+  len = this.asteroids.length;
+
+  for (; i < len; i++) {
+    this.asteroids[i].draw(this.ctxMovement);
+  }
+
+};
+
+Asteroids.prototype.collisionTest = function () {
+
+  var i, j, len, asteroid, ctx, xMin, xMax, yMin, yMax, clipArea, clipLength, hitCount;
+
+  i = 0;
+  len = this.asteroids.length;
+  ctx = this.ctxMovement;
+
+  for (; i < len; i++) {
+    asteroid = this.asteroids[i];
+
+    xMin = -(asteroid.width * 0.5);
+    xMax = asteroid.width * 0.5;
+    yMin = -(asteroid.height * 0.5);
+    yMax = asteroid.height * 0.5;
+
+    ctx.save();
+    //ctx.translate(asteroid.x, asteroid.y);
+    //ctx.rotate(asteroid.angle * 3.14 / 180);
+
+    clipArea = ctx.getImageData(asteroid.x + xMin, asteroid.y + yMin, asteroid.x + xMax, asteroid.y + yMax);
+    clipLength = (asteroid.width * asteroid.height) * 0.25;
+    j = 0;
+    hitCount = 0;
+
+    for (; j < clipLength; j++) {
+      if (clipArea.data[4 * j] > 0) {
+        hitCount++;
+      }
+    }
+
+    if (hitCount > clipLength * 0.5) {
+      asteroid.hit();
+    }
+
+    ctx.restore();
+
+  }
+
+};
+
+module.exports = Asteroids;
+
+},{"./asteroid.js":2,"./elements.js":4,"./fullscreen.js":5,"./util.js":7}],4:[function(require,module,exports){
 var global = window,
   doc = global.document;
 
@@ -123,7 +298,7 @@ module.exports = {
   createCanvas: createCanvas
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var activeElement = window.document.getElementsByTagName('body')[0];
 
 var requestFullScreen = function (el) {
@@ -166,7 +341,7 @@ module.exports = {
   init: init
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var global = window;
 
 var init = function () {
@@ -178,31 +353,18 @@ var init = function () {
     undefined);
 };
 
-var requestFullScreen = function (el) {
-
-  if (el.requestFullScreen) {
-    el.requestFullScreen();
-  } else if (el.msRequestFullScreen) {
-    el.msRequestFullScreen();
-  } else if (el.mozRequestFullScreen) {
-    el.mozRequestFullScreen();
-  } else if (el.webkitRequestFullScreen) {
-    el.webkitRequestFullScreen();
-  }
-
-};
-
 module.exports = {
-  init: init,
-  requestFullScreen: requestFullScreen
+  init: init
 };
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var currentColor = {
   r: 0xff,
   g: 0xff,
   b: 0xff
 };
+
+var thresholdValue = 0x15;
 
 /**
  * equivalant to Math.abs();
@@ -212,11 +374,11 @@ var fastAbs = function (value) {
 };
 
 var threshold = function (value) {
-  return (value > 0x15) ? value : 0;
+  return (value > thresholdValue) ? value : 0;
 };
 
 var aboveThreshold = function (value) {
-  return (value > 0x15) ? false : true;
+  return (value > thresholdValue) ? false : true;
 };
 
 var cycleColor = function () {
@@ -226,7 +388,7 @@ var cycleColor = function () {
     b: currentColor.b + (Math.random() * 10 - 5),
     g: currentColor.g + (Math.random() * 10 - 5)
   };
-  
+
   color.r = (color.r >= 0xff ? 0xff : (color.r <= 0 ? 0 : color.r));
   color.g = (color.g >= 0xff ? 0xff : (color.g <= 0 ? 0 : color.g));
   color.b = (color.b >= 0xff ? 0xff : (color.b <= 0 ? 0 : color.b));
@@ -236,15 +398,13 @@ var cycleColor = function () {
   return color;
 };
 
-var difference = function (target, data1, data2, lastBlend) {
+var difference = function (target, data1, data2) {
 
   var i, len, avarage1, average2, diff, randomColor;
 
   if (data1.length !== data2.length) {
     return null;
   }
-
-  randomColor = cycleColor();
 
   i = 0;
   len = data1.length * 0.25;
@@ -255,17 +415,12 @@ var difference = function (target, data1, data2, lastBlend) {
 
     diff = aboveThreshold(fastAbs(avarage1 - avarage2));
 
-    target[4 * i] = 0xff;
-    target[4 * i + 1] = 0xff;
-    target[4 * i + 2] = 0xff;
-    target[4 * i + 3] = threshold(fastAbs(avarage1 - avarage2));
-
-    if (lastBlend[4 * i + 3] !== 0) {
-      target[4 * i] = randomColor.r;
-      target[4 * i + 1] = randomColor.g;
-      target[4 * i + 2] = randomColor.b;
-      target[4 * i + 3] = Math.floor(lastBlend[4 * i + 3] * 0.9999);
+    if (!diff) {
+      target[4 * i] = 0xff;
+      target[4 * i + 1] = 0xff;
+      target[4 * i + 2] = 0xff;
     }
+    target[4 * i + 3] = threshold(fastAbs(avarage1 - avarage2));
 
     ++i;
   }
@@ -278,14 +433,14 @@ module.exports = {
   difference: difference
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var polyfill = require('./polyfill.js'),
-  Motion = require('./coreMotion.js');
+  Asteroids = require('./asteroids.js');
 
 var global = window;
 
 var success = function (stream) {
-  var motion = new Motion(stream);
+  var asteroids = new Asteroids(stream);
 };
 
 var error = function () {
@@ -313,4 +468,4 @@ module.exports = {
   create: create
 };
 
-},{"./coreMotion.js":2,"./polyfill.js":5}]},{},[1]);
+},{"./asteroids.js":3,"./polyfill.js":6}]},{},[1]);

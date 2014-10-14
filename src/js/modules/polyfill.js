@@ -9,21 +9,6 @@ var init = function () {
     undefined);
 };
 
-var requestFullScreen = function (el) {
-
-  if (el.requestFullScreen) {
-    el.requestFullScreen();
-  } else if (el.msRequestFullScreen) {
-    el.msRequestFullScreen();
-  } else if (el.mozRequestFullScreen) {
-    el.mozRequestFullScreen();
-  } else if (el.webkitRequestFullScreen) {
-    el.webkitRequestFullScreen();
-  }
-
-};
-
 module.exports = {
-  init: init,
-  requestFullScreen: requestFullScreen
+  init: init
 };
